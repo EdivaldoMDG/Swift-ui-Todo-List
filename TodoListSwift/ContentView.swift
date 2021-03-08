@@ -4,14 +4,57 @@
 //
 //  Created by Edivaldo Goncalves on 3/8/21.
 //
-
+ 
 import SwiftUI
-
+import Combine
 struct ContentView: View {
-    var body: some View {
-        Text("Hello, world!")
-            .padding()
+  
+     @ObservedObject var taskStore = TaskStore()
+    
+    @State var newTodo : String = ""
+    
+    var SearchBar : some View {
+        
+        HStack {
+            TextField("Enter in new task",text: self.$newTodo)
+            Button(action: self.addNewToDo, label: {
+                Text("Add New To Do")
+            })
+        }
     }
+    
+    func addNewToDo() {
+        taskStore.tasks.append(
+            Task(id: String(taskStore.tasks.count + 1),
+                 toDoItem: newTodo))
+        self.newTodo = ""
+        //Add auto generated id in future
+    }
+    
+    var body: some View {
+        NavigationView{
+            VStack{
+                SearchBar.padding()
+                List{
+                    ForEach(self.taskStore.tasks) {
+                        task in
+                        Text(task.toDoItem)
+                    }.onMove(perform:  self.move
+                    )
+                    .onDelete(perform:self.delete)
+                }.navigationBarTitle("Tasks")
+                .navigationBarItems(trailing: EditButton())
+            }
+        }
+    }
+    func move(from source : IndexSet, to destination : Int){
+        taskStore.tasks.move(fromOffsets: source, toOffset: destination)
+    }
+    
+    func delete(at offsets :  IndexSet){
+        taskStore.tasks.remove(atOffsets: offsets)
+    }
+
 }
 
 struct ContentView_Previews: PreviewProvider {
